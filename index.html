@@ -382,7 +382,47 @@
      separate canvas in the margin around it. */
   .canvas-stack{ position:relative; flex:none; }
   #rulerCanvas{ position:absolute; left:0; top:0; pointer-events:none; }
-  #gridCanvas{ display:block; touch-action:none; cursor:crosshair; border:1px solid var(--grid-major); border-radius:2px; position:relative; }
+  #gridCanvas{
+    display:block; touch-action:none; cursor:crosshair; border:1px solid var(--grid-major);
+    border-radius:2px; position:relative;
+    /* a finger held on the chart should draw, not pop up a magnifier or
+       select the page around it */
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+  }
+
+  /* A finger is blunter than a mouse: on a touch screen the buttons, the
+     threads and the switches all grow enough to hit without aiming. */
+  /* A finger is blunter than a mouse: on a touch screen the buttons, the
+     threads and the switches all grow enough to hit without aiming. The
+     rules come on either when the browser says the pointer is coarse or —
+     since not every tablet says so — as soon as a finger touches the page. */
+  button, .segmented button, summary{ -webkit-tap-highlight-color:transparent; }
+  @media (pointer: coarse){
+    .icon-btn{ width:44px; height:44px; }
+    button.small{ padding:9px 13px; font-size:.82rem; }
+    .segmented button{ padding:10px 16px; }
+    .settings-toggle > summary{ padding:10px 16px; }
+    .palette-grid{ grid-template-columns:repeat(auto-fill, minmax(34px, 1fr)); gap:6px; max-height:300px; }
+    .thread-tools button{ padding:9px 13px; }
+    .saved-row button{ padding:9px 13px; }
+    input[type="checkbox"]{ width:20px; height:20px; }
+    input[type="range"]{ height:28px; }
+    .gen-field select{ min-height:38px; }
+    .gen-field input[type=number]{ min-height:38px; }
+    .help-row{ padding:5px 0; }
+  }
+  :root.touch-input .icon-btn{ width:44px; height:44px; }
+  :root.touch-input button.small{ padding:9px 13px; font-size:.82rem; }
+  :root.touch-input .segmented button{ padding:10px 16px; }
+  :root.touch-input .settings-toggle > summary{ padding:10px 16px; }
+  :root.touch-input .palette-grid{ grid-template-columns:repeat(auto-fill, minmax(34px, 1fr)); gap:6px; max-height:300px; }
+  :root.touch-input .thread-tools button{ padding:9px 13px; }
+  :root.touch-input .saved-row button{ padding:9px 13px; }
+  :root.touch-input input[type="checkbox"]{ width:20px; height:20px; }
+  :root.touch-input input[type="range"]{ height:28px; }
+  :root.touch-input .gen-field select{ min-height:38px; }
+  :root.touch-input .gen-field input[type=number]{ min-height:38px; }
+  :root.touch-input .help-row{ padding:5px 0; }
 
   /* ---------- legend ---------- */
   .legend-panel{ position:sticky; top:16px; }
@@ -611,6 +651,7 @@
         <button id="stampFlipHBtn" class="small gen-hidden" data-i18n="stampFlipHBtn">Spegla ↔</button>
         <button id="stampFlipVBtn" class="small gen-hidden" data-i18n="stampFlipVBtn">Spegla ↕</button>
         <button id="stampRotateBtn" class="small gen-hidden" data-i18n="stampRotateBtn">Snúa 90°</button>
+        <button id="stampPlaceBtn" class="small primary gen-hidden" data-i18n="stampPlaceBtn">Setja hér</button>
         <button id="selCancelBtn" class="small" data-i18n="selCancelBtn">Hætta við</button>
       </section>
       <section class="tool-group" aria-label="Saga">
@@ -1183,7 +1224,7 @@
    "toolFill","toolLine","toolRect","toolPick","fitBtn","stitchViewBtn",
    "flipHBtn","flipVBtn","rotateBtn","centerBtn",
    "toolSelect","selectionBar","selectionHint","selCopyBtn","selCutBtn","selDeleteBtn",
-   "pasteBtn","stampFlipHBtn","stampFlipVBtn","stampRotateBtn","selCancelBtn",
+   "pasteBtn","stampFlipHBtn","stampFlipVBtn","stampRotateBtn","stampPlaceBtn","selCancelBtn",
    "paletteGrid","selectedSwatch","selectedCode","selectedName",
    "palettePanel","summarySwatch","summaryCode",
    "canvasScroll","canvasStack","gridCanvas","rulerCanvas",
@@ -1288,6 +1329,7 @@
       stampFlipHBtn: "Spegla ↔",
       stampFlipVBtn: "Spegla ↕",
       stampRotateBtn: "Snúa 90°",
+      stampPlaceBtn: "Setja hér",
       selCancelBtn: "Hætta við",
       centerTitle: "Miðja mynstrið á blaðinu",
       mirrorLabel: "Speglun",
@@ -1324,6 +1366,8 @@
       closeBtn: "Loka",
       helpSecTools: "Verkfæri",
       helpSecChart: "Á netinu",
+      helpSecTouch: "Á spjaldtölvu og síma",
+      helpTouchFlow: "Fingurinn teiknar eins og músin: strjúktu yfir reitina til að sauma og notaðu strokleðrið til að taka út. Tveir fingur hreyfa myndina — dragðu með tveimur til að renna til hliðar og upp og niður, klíptu saman eða teygðu í sundur til að minnka og stækka. Ef fyrri fingurinn nær að setja niður spor um leið og þú byrjar hreyfinguna er það sjálfkrafa tekið til baka. Þegar bútur eða texti bíður sýnir fyrsta snertingin hvar hann lendir og sú næsta setur hann niður — eða þú ýtir á „Setja hér“.",
       helpSecUndo: "Afturkalla",
       helpSecSelect: "Velja, afrita og líma",
       helpSecText: "Texti",
@@ -1532,6 +1576,7 @@
       stampFlipHBtn: "Mirror ↔",
       stampFlipVBtn: "Mirror ↕",
       stampRotateBtn: "Turn 90°",
+      stampPlaceBtn: "Place here",
       selCancelBtn: "Cancel",
       centerTitle: "Centre the pattern on the chart",
       mirrorLabel: "Mirror",
@@ -1568,6 +1613,8 @@
       closeBtn: "Close",
       helpSecTools: "Tools",
       helpSecChart: "On the chart",
+      helpSecTouch: "On a tablet or phone",
+      helpTouchFlow: "A finger draws just like the mouse: sweep across the squares to stitch, and use the eraser to take them out. Two fingers move the view — drag with two to slide the chart, pinch or spread to zoom out and in. If the first finger happens to lay a stitch down as the gesture begins, it is taken back for you. When a piece or some text is waiting, the first tap shows where it would land and the next one puts it there — or press \u201cplace here\u201d.",
       helpSecUndo: "Undo",
       helpSecSelect: "Select, copy and paste",
       helpSecText: "Text",
@@ -3017,10 +3064,96 @@
     });
   }
 
+  // A touch screen announces itself the first time a finger lands.
+  window.addEventListener("pointerdown", function(ev){
+    if (ev.pointerType === "touch") document.documentElement.classList.add("touch-input");
+  }, true);
+
+  /* ---------------- two fingers ----------------
+     A tablet has no space bar to hold down and no wheel to spin, so the
+     second finger does that work: drag with two fingers to slide the chart
+     about, spread or pinch them to zoom. The first of those fingers has
+     usually just laid a stitch down, so whatever it started is taken back
+     the moment the second one lands. */
+  var touchPoints = {};
+  var gesture = null;
+  var gestureHolds = false;     // stays true until every finger is lifted
+  var strokePushedUndo = false; // the stroke in progress can be taken back
+
+  function touchCount(){ return Object.keys(touchPoints).length; }
+  function beginGesture(){
+    var ids = Object.keys(touchPoints);
+    if (ids.length < 2) return;
+    var a = touchPoints[ids[0]], b = touchPoints[ids[1]];
+    gesture = {
+      dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+      mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2,
+      cell: state.cellSize,
+      scrollLeft: el.canvasScroll.scrollLeft,
+      scrollTop: el.canvasScroll.scrollTop
+    };
+    gestureHolds = true;
+    ids.forEach(function(id){
+      if (el.gridCanvas.hasPointerCapture && el.gridCanvas.hasPointerCapture(+id)){
+        try { el.gridCanvas.releasePointerCapture(+id); } catch(e){}
+      }
+    });
+    if (selDrag){ selDrag = null; updateSelectionBar(); }
+    shapePreview = null; shapeStart = null;
+    backstitchLast = null;
+    painting = false;
+    if (strokePushedUndo){ undo(); strokePushedUndo = false; }
+    renderCanvas(true);
+  }
+  function moveGesture(){
+    var ids = Object.keys(touchPoints);
+    if (!gesture || ids.length < 2) return;
+    var a = touchPoints[ids[0]], b = touchPoints[ids[1]];
+    var dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    var ratio = dist / gesture.dist;
+    if (Math.abs(ratio - 1) > 0.015) setZoom(gesture.cell * ratio);
+    var rect = el.canvasScroll.getBoundingClientRect();
+    var localX = gesture.mx - rect.left, localY = gesture.my - rect.top;
+    var scale = state.cellSize / gesture.cell;
+    el.canvasScroll.scrollLeft = (gesture.scrollLeft + localX) * scale - localX - (mx - gesture.mx);
+    el.canvasScroll.scrollTop  = (gesture.scrollTop + localY) * scale - localY - (my - gesture.my);
+  }
+  function endGesture(id){
+    delete touchPoints[id];
+    if (touchCount() < 2) gesture = null;
+    if (touchCount() === 0) gestureHolds = false;
+  }
+
   el.gridCanvas.addEventListener("pointerdown", function(ev){
+    if (ev.pointerType === "touch"){
+      // If a finger was ever lifted somewhere the page did not hear about,
+      // the first finger of the next touch clears whatever was left over —
+      // otherwise drawing would stay blocked for good.
+      if (ev.isPrimary){ touchPoints = {}; gesture = null; gestureHolds = false; }
+      touchPoints[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+      if (touchCount() >= 2){ beginGesture(); return; }
+    }
+    if (gestureHolds) return;
     // A piece waiting to be placed takes the click before any tool does.
     if (pendingStamp){
       if (ev.button === 2){ cancelStamp(); updateSelectionBar(); renderCanvas(true); return; }
+      // A finger has no hover: the first tap shows where the piece would
+      // land, the next one puts it there. A mouse has been showing the
+      // preview all along, so its click places straight away.
+      if (ev.pointerType === "touch"){
+        var tc = rawCellFromEvent(ev);
+        var tx = tc.x - Math.floor(pendingStamp.w / 2);
+        var ty = tc.y - Math.floor(pendingStamp.h / 2);
+        var settled = pendingStamp.x !== null &&
+                      Math.abs(tx - pendingStamp.x) <= 1 && Math.abs(ty - pendingStamp.y) <= 1;
+        if (!settled){
+          pendingStamp.x = tx; pendingStamp.y = ty;
+          updateSelectionBar();
+          renderCanvas(true);
+          return;
+        }
+      }
       placeStamp();
       return;
     }
@@ -3046,6 +3179,7 @@
       var fc = cellFromEvent(ev);
       if (!fc) return;
       pushUndo();
+      strokePushedUndo = true;
       dismissSample();
       // With mirroring on, the same area is filled on the other side too —
       // each mirrored point is filled in its own right, since the shape
@@ -3068,6 +3202,7 @@
     }
     if (state.tool === "backstitch"){
       pushUndo();
+      strokePushedUndo = true;
       dismissSample();
       var rect = el.gridCanvas.getBoundingClientRect();
       var px = ev.clientX-rect.left, py = ev.clientY-rect.top;
@@ -3094,6 +3229,7 @@
     painting = true;
     el.gridCanvas.setPointerCapture(ev.pointerId);
     pushUndo();
+    strokePushedUndo = true;
     dismissSample();
     if (cell) paintAt(cell, erasing);
     // The "Eyða" tool (and a right-click anywhere) also removes the nearest
@@ -3106,6 +3242,11 @@
     renderCanvas();
   });
   el.gridCanvas.addEventListener("pointermove", function(ev){
+    if (ev.pointerType === "touch" && touchPoints[ev.pointerId]){
+      touchPoints[ev.pointerId] = { x: ev.clientX, y: ev.clientY };
+      if (gesture){ moveGesture(); return; }
+    }
+    if (gestureHolds) return;
     if (pendingStamp){
       var pc = rawCellFromEvent(ev);
       var nx = pc.x - Math.floor(pendingStamp.w / 2);
@@ -3156,7 +3297,10 @@
     scheduleRender();
   });
   ["pointerup","pointercancel","pointerleave"].forEach(function(evtName){
-    el.gridCanvas.addEventListener(evtName, function(){
+    el.gridCanvas.addEventListener(evtName, function(ev){
+      if (ev && ev.pointerType === "touch") endGesture(ev.pointerId);
+      strokePushedUndo = false;
+      if (gestureHolds){ painting = false; return; }
       var wasPainting = painting;
       if (selDrag){
         var x1 = Math.min(selDrag.ax, selDrag.bx), x2 = Math.max(selDrag.ax, selDrag.bx);
@@ -3212,6 +3356,7 @@
     el.stampFlipHBtn.classList.toggle("gen-hidden", !placing);
     el.stampFlipVBtn.classList.toggle("gen-hidden", !placing);
     if (el.stampRotateBtn) el.stampRotateBtn.classList.toggle("gen-hidden", !placing);
+    if (el.stampPlaceBtn) el.stampPlaceBtn.classList.toggle("gen-hidden", !placing);
     el.selectionHint.textContent = t(placing ? "selHintPlace" : (area ? "selHintArea" : "selHintClip"));
   }
 
@@ -3339,6 +3484,19 @@
                  back: JSON.parse(JSON.stringify(clipboard.back)) });
   });
   if (el.stampRotateBtn) el.stampRotateBtn.addEventListener("click", rotateStamp);
+  if (el.stampPlaceBtn) el.stampPlaceBtn.addEventListener("click", function(){
+    if (!pendingStamp) return;
+    // Nowhere chosen yet (a finger has not tapped): drop it in the middle of
+    // what is on screen.
+    if (pendingStamp.x === null){
+      var sc = el.canvasScroll;
+      var cx = Math.round((sc.scrollLeft + sc.clientWidth/2) / state.cellSize);
+      var cy = Math.round((sc.scrollTop + sc.clientHeight/2) / state.cellSize);
+      pendingStamp.x = Math.max(0, Math.min(state.width - 1, cx - Math.floor(pendingStamp.w/2)));
+      pendingStamp.y = Math.max(0, Math.min(state.height - 1, cy - Math.floor(pendingStamp.h/2)));
+    }
+    placeStamp();
+  });
   if (el.stampFlipHBtn) el.stampFlipHBtn.addEventListener("click", function(){ flipStamp("h"); });
   if (el.stampFlipVBtn) el.stampFlipVBtn.addEventListener("click", function(){ flipStamp("v"); });
   if (el.selCancelBtn) el.selCancelBtn.addEventListener("click", function(){
@@ -5361,6 +5519,7 @@
       ["$helpKeyArrows", "helpArrows"], ["$helpKeyShiftArrows", "helpArrowsBig"],
       ["$helpKeySpace", "helpPan"], ["$helpKeyEsc", "helpEsc"]
     ], text: "helpChartFlow" },
+    { h: "helpSecTouch", text: "helpTouchFlow" },
     { h: "helpSecUndo", rows: [
       ["$helpKeyUndo", "helpUndo"], ["$helpKeyRedo", "helpRedo"]
     ]},
