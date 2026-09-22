@@ -1497,13 +1497,17 @@
       helpArrowsBig: "Færa um tíu reiti í einu",
       helpKeySpace: "Bilstöng + draga",
       helpPan: "Færa útsýnið (líka með miðjuhnappi músar)",
+      helpKeyDelete: "Delete / Backspace",
+      helpDeleteKey: "Eyðir sporunum inni í valda svæðinu",
+      helpKeyClip: "Ctrl/⌘ + C, X, V",
+      helpClipKeys: "Afrita, klippa og líma valda svæðið",
       helpKeyEsc: "Esc",
-      helpEsc: "Hætta við bút sem bíður eða val",
+      helpEsc: "Hættir við bút sem bíður, val og bútinn sem var afritaður",
       helpKeyUndo: "Ctrl/⌘ + Z",
       helpUndo: "Afturkalla síðustu breytingu",
       helpKeyRedo: "Ctrl/⌘ + Shift + Z",
       helpRedo: "Endurtaka það sem var afturkallað",
-      helpSelectFlow: "Dragðu ramma um svæði, veldu svo Afrita, Klippa eða Eyða. Bútinn má spegla og snúa um 90° áður en þú smellir þar sem hann á að lenda. Líma setur síðasta bútinn niður aftur.",
+      helpSelectFlow: "Dragðu ramma um svæði, veldu svo Afrita, Klippa eða Eyða. Bútinn má spegla og snúa um 90° áður en þú smellir þar sem hann á að lenda. Líma setur sama bútinn niður aftur, eins oft og þú vilt, og Ctrl/\u2318 + C, X og V virka líka. „Hætta við“ — eða Esc — hættir við allt saman og hendir bútnum, og þá fer stikan af skjánum.",
       helpTextFlow: "Hver lína í textareitnum verður ein lína í mynstrinu og þær miðjast hver yfir aðra. „Bæta texta við“ lætur textann elta bendilinn — smelltu þar sem hann á að vera.",
       helpMirrorFlow: "Teiknaðu einn fjórðung og hitt speglast sjálfkrafa um miðju blaðsins. Speglunin nær til pennans, fötunnar, línunnar, kassans og bakspora — líka þegar þú eyðir, og baksporslína tekur spegilmynd sína með sér. Bútur sem þú límir og texti sem þú setur niður lenda hins vegar bara þar sem þú smellir.",
       helpImageFlow: "Myndin fyllir allt netið og hver reitur fær næsta DMC-lit. „Fjöldi lita“ ræður hversu margir þræðir eru notaðir — allt frá einum upp í fjörutíu eða óheft; einn litur á mynd með gegnsæjum bakgrunni gefur skuggamynd af forminu. Birta og birtuskil teikna myndina upp á nýtt strax og „Núllstilla birtu“ setur þá aftur á núll, og „Bara þræðirnir mínir“ notar eingöngu þá þræði sem þú hefur merkt. Viljirðu frekar teikna sjálf eftir myndinni, hakaðu við „Hafa myndina undir netinu“ — þá liggur hún dauf undir og þú velur hvert spor. Hún fylgir hvorki mynstrinu né því sem þú sækir.",
@@ -1755,13 +1759,17 @@
       helpArrowsBig: "Move ten squares at a time",
       helpKeySpace: "Space + drag",
       helpPan: "Move the view (the middle mouse button works too)",
+      helpKeyDelete: "Delete / Backspace",
+      helpDeleteKey: "Clears the stitches inside the selection",
+      helpKeyClip: "Ctrl/⌘ + C, X, V",
+      helpClipKeys: "Copy, cut and paste the selected area",
       helpKeyEsc: "Esc",
-      helpEsc: "Cancel a waiting piece or a selection",
+      helpEsc: "Cancels a waiting piece, a selection and the copied piece",
       helpKeyUndo: "Ctrl/⌘ + Z",
       helpUndo: "Undo the last change",
       helpKeyRedo: "Ctrl/⌘ + Shift + Z",
       helpRedo: "Redo what was undone",
-      helpSelectFlow: "Drag a box around an area, then choose Copy, Cut or Delete. The piece can be mirrored and turned 90° before you click where it should land. Paste puts the last piece down again.",
+      helpSelectFlow: "Drag a box around an area, then choose Copy, Cut or Delete. The piece can be mirrored and turned 90° before you click where it should land. Paste puts the same piece down again, as often as you like, and Ctrl/\u2318 + C, X and V work as well. Cancel \u2014 or Esc \u2014 drops the lot: the kept piece is thrown away and the bar leaves the screen.",
       helpTextFlow: "Each line in the text box becomes one line on the chart, centred over each other. \u201cAdd text\u201d hangs the text off the pointer — click where it should go.",
       helpMirrorFlow: "Draw one quarter and the rest is mirrored about the middle of the chart. It covers the pen, the bucket, the line, the box and backstitch — erasing too, and rubbing out a backstitch line takes its reflection with it. A pasted piece and placed text land only where you click.",
       helpImageFlow: "The photo fills the whole grid and every stitch gets its nearest DMC colour. \u201cNumber of colours\u201d decides how many threads are used — anything from one to forty, or no limit; one colour on a picture with a see-through background gives a silhouette of the shape. Brightness and contrast redraw it at once and \u201creset brightness\u201d puts them back to nothing, and \u201conly my threads\u201d uses just the ones you have marked. To draw it by hand instead, tick \u201ckeep the photo under the grid\u201d — it then lies faintly underneath and you pick every stitch. It is part of neither the pattern nor anything you download.",
@@ -3706,37 +3714,49 @@
     renderCanvas();
   }
 
-  if (el.toolSelect) el.selCopyBtn.addEventListener("click", function(){
-    if (!selection) return;
-    clipboard = grabSelection(selection);
+  // A fresh copy of what is on the clipboard, so placing it once does not
+  // spend it — the same piece can be put down again and again.
+  function stampFromClipboard(){
+    if (!clipboard) return;
     startStamp({ w: clipboard.w, h: clipboard.h,
                  cells: JSON.parse(JSON.stringify(clipboard.cells)),
                  back: JSON.parse(JSON.stringify(clipboard.back)) });
-  });
-  if (el.selCutBtn) el.selCutBtn.addEventListener("click", function(){
+  }
+  function copySelection(){
+    if (!selection) return;
+    clipboard = grabSelection(selection);
+    stampFromClipboard();
+  }
+  function cutSelection(){
     if (!selection) return;
     clipboard = grabSelection(selection);
     pushUndo();
     eraseSelection(selection);
     renderCanvas();
-    startStamp({ w: clipboard.w, h: clipboard.h,
-                 cells: JSON.parse(JSON.stringify(clipboard.cells)),
-                 back: JSON.parse(JSON.stringify(clipboard.back)) });
-  });
-  if (el.selDeleteBtn) el.selDeleteBtn.addEventListener("click", function(){
+    stampFromClipboard();
+  }
+  function deleteSelection(){
     if (!selection) return;
     pushUndo();
     eraseSelection(selection);
     clearSelection();
     updateSelectionBar();
     renderCanvas();
-  });
-  if (el.pasteBtn) el.pasteBtn.addEventListener("click", function(){
-    if (!clipboard) return;
-    startStamp({ w: clipboard.w, h: clipboard.h,
-                 cells: JSON.parse(JSON.stringify(clipboard.cells)),
-                 back: JSON.parse(JSON.stringify(clipboard.back)) });
-  });
+  }
+  /* "Hætta við" means done with the whole business: the piece stops following
+     the pointer, the marquee goes, and the kept copy is thrown away — so the
+     bar leaves the screen instead of sitting there offering to paste. */
+  function dropSelectionWork(){
+    cancelStamp();
+    clearSelection();
+    clipboard = null;
+    updateSelectionBar();
+    renderCanvas(true);
+  }
+  if (el.selCopyBtn) el.selCopyBtn.addEventListener("click", copySelection);
+  if (el.selCutBtn) el.selCutBtn.addEventListener("click", cutSelection);
+  if (el.selDeleteBtn) el.selDeleteBtn.addEventListener("click", deleteSelection);
+  if (el.pasteBtn) el.pasteBtn.addEventListener("click", stampFromClipboard);
   if (el.stampRotateBtn) el.stampRotateBtn.addEventListener("click", rotateStamp);
   if (el.stampPlaceBtn) el.stampPlaceBtn.addEventListener("click", function(){
     if (!pendingStamp) return;
@@ -3753,9 +3773,7 @@
   });
   if (el.stampFlipHBtn) el.stampFlipHBtn.addEventListener("click", function(){ flipStamp("h"); });
   if (el.stampFlipVBtn) el.stampFlipVBtn.addEventListener("click", function(){ flipStamp("v"); });
-  if (el.selCancelBtn) el.selCancelBtn.addEventListener("click", function(){
-    cancelStamp(); clearSelection(); updateSelectionBar(); renderCanvas(true);
-  });
+  if (el.selCancelBtn) el.selCancelBtn.addEventListener("click", dropSelectionWork);
 
   /* ---------------- dragging the chart around ----------------
      Zoomed in, the chart is bigger than its frame and reaching a far corner
@@ -3839,6 +3857,14 @@
       return;
     }
     if ((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase() === "y"){ ev.preventDefault(); redo(); return; }
+    // The usual copy, cut and paste keys work on the chart too — but only
+    // when a text box is not the one wanting them.
+    if ((ev.ctrlKey||ev.metaKey) && !typing && !helpOpen()){
+      var clipKey = ev.key.toLowerCase();
+      if (clipKey === "c" && selection){ ev.preventDefault(); copySelection(); return; }
+      if (clipKey === "x" && selection){ ev.preventDefault(); cutSelection(); return; }
+      if (clipKey === "v" && clipboard){ ev.preventDefault(); stampFromClipboard(); return; }
+    }
     if (typing || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     // Single-key tool shortcuts, as in any drawing app.
     var arrows = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
@@ -3848,11 +3874,18 @@
       nudge(arrows[ev.key][0]*step, arrows[ev.key][1]*step);
       return;
     }
+    // Delete (or Backspace) empties the squares inside the marquee — the same
+    // thing the "Eyða" button in the bar does, and just as undoable.
+    if ((ev.key === "Delete" || ev.key === "Backspace") && selection && !helpOpen()){
+      ev.preventDefault();
+      deleteSelection();
+      return;
+    }
     if (ev.key === "Escape"){
       if (helpOpen()){ ev.preventDefault(); closeHelp(); return; }
-      if (pendingStamp || selection){
+      if (pendingStamp || selection || clipboard){
         ev.preventDefault();
-        cancelStamp(); clearSelection(); updateSelectionBar(); renderCanvas(true);
+        dropSelectionWork();
       }
       return;
     }
@@ -5851,7 +5884,9 @@
     { h: "helpSecUndo", rows: [
       ["$helpKeyUndo", "helpUndo"], ["$helpKeyRedo", "helpRedo"]
     ]},
-    { h: "helpSecSelect", text: "helpSelectFlow" },
+    { h: "helpSecSelect", rows: [
+      ["$helpKeyDelete", "helpDeleteKey"], ["$helpKeyClip", "helpClipKeys"]
+    ], text: "helpSelectFlow" },
     { h: "helpSecText", text: "helpTextFlow" },
     { h: "helpSecMirror", text: "helpMirrorFlow" },
     { h: "helpSecImage", text: "helpImageFlow" },
