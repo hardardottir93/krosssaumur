@@ -187,7 +187,21 @@
   /* collapsible toggles that live inline in the toolbar row. Their content
      opens as a floating dropdown card (position:absolute) instead of pushing
      the rest of the page down, so the canvas below never jumps around. */
-  .toolbar-row > .settings-toggle{ flex:none; position:relative; }
+  /* Each row of the bar takes the whole width, so a row stacks under the one
+     before it instead of sitting beside it. */
+  .toolbar > .toolbar-row{ flex:1 1 100%; }
+  /* The three menus travel together: if the bar has to break, all three go
+     down as one instead of leaving a single button dangling on its own line. */
+  /* flex:none keeps the cluster at its full width, so the row cannot squeeze
+     it and break one button off on its own; it either fits beside the tools
+     or goes down as a block. Narrow screens are the exception — there three
+     pills never fit side by side, so the cluster takes its own line and wraps
+     inside it. */
+  .menu-cluster{ display:flex; flex-wrap:nowrap; flex:none; align-items:center; gap:8px 10px; }
+  @media (max-width:820px){
+    .menu-cluster{ flex:1 1 100%; flex-wrap:wrap; }
+  }
+  .settings-toggle{ flex:none; position:relative; }
   .settings-toggle > summary{
     cursor:pointer; list-style:none; user-select:none;
     display:inline-flex; align-items:center; gap:6px;
@@ -281,6 +295,26 @@
     fill:none; stroke:currentColor; stroke-width:1.5;
     stroke-linecap:round; stroke-linejoin:round;
   }
+  /* The zoom reading is also the way to set it: a number you can overwrite.
+     It stays flat like a label until you go near it, so the toolbar does not
+     grow another boxed-in field. */
+  .zoom-field{
+    display:inline-flex; align-items:center; gap:3px;
+    font-size:.8rem; color:var(--ink-soft); white-space:nowrap;
+  }
+  .zoom-field input{
+    width:44px; text-align:right; padding:3px 3px; border-radius:6px;
+    border:1px solid transparent; background:transparent; color:inherit;
+    font-family:"IBM Plex Mono",monospace; font-size:.8rem; font-variant-numeric:tabular-nums;
+  }
+  .zoom-field input:hover{ border-color:var(--line); background:var(--surface); }
+  .zoom-field input:focus{
+    border-color:var(--line); background:var(--surface); color:var(--ink);
+    outline:2px solid var(--focus); outline-offset:1px;
+  }
+  :root.touch-input .zoom-field input{ padding:7px 4px; }
+  @media (pointer: coarse){ .zoom-field input{ padding:7px 4px; } }
+
   .sel-bar{ gap:6px; }
   .sel-bar .group-label{ white-space:nowrap; }
   .canvas-scroll.panning, .canvas-scroll.panning canvas{ cursor:grab; }
@@ -677,18 +711,6 @@
           <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M2.8 5.6V4a1.2 1.2 0 0 1 1.2-1.2h1.6M12.4 2.8H14A1.2 1.2 0 0 1 15.2 4v1.6M15.2 12.4V14a1.2 1.2 0 0 1-1.2 1.2h-1.6M5.6 15.2H4A1.2 1.2 0 0 1 2.8 14v-1.6M8 2.8h2M8 15.2h2M2.8 8v2M15.2 8v2"/></svg>
         </button>
       </section>
-      <section class="tool-group sel-bar gen-hidden" id="selectionBar" aria-label="Valið svæði">
-        <span class="group-label" id="selectionHint" data-i18n="selHintArea">Valið svæði</span>
-        <button id="selCopyBtn" class="small" data-i18n="selCopyBtn">Afrita</button>
-        <button id="selCutBtn" class="small" data-i18n="selCutBtn">Klippa</button>
-        <button id="selDeleteBtn" class="small ghost-danger" data-i18n="selDeleteBtn">Eyða</button>
-        <button id="pasteBtn" class="small primary gen-hidden" data-i18n="pasteBtn">Líma</button>
-        <button id="stampFlipHBtn" class="small gen-hidden" data-i18n="stampFlipHBtn">Spegla ↔</button>
-        <button id="stampFlipVBtn" class="small gen-hidden" data-i18n="stampFlipVBtn">Spegla ↕</button>
-        <button id="stampRotateBtn" class="small gen-hidden" data-i18n="stampRotateBtn">Snúa 90°</button>
-        <button id="stampPlaceBtn" class="small primary gen-hidden" data-i18n="stampPlaceBtn">Setja hér</button>
-        <button id="selCancelBtn" class="small" data-i18n="selCancelBtn">Hætta við</button>
-      </section>
       <section class="tool-group" aria-label="Saga">
         <button id="undoBtn" class="icon-btn" data-i18n-title="undoTitle" title="Afturkalla síðustu breytingu" data-i18n-aria="undoBtn" aria-label="Afturkalla">
           <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3.2 8.2h7.4a4 4 0 0 1 0 8H7.4"/><path d="M6 4.8L2.6 8.2 6 11.6"/></svg>
@@ -702,7 +724,12 @@
       </section>
       <section class="tool-group" aria-label="Aðdráttur">
         <button id="zoomOut" data-i18n-title="zoomOutTitle" title="Minnka reiti">−</button>
-        <span class="mono" id="zoomLabel" style="font-size:.8rem;color:var(--ink-soft);display:inline-block;width:52px;text-align:center;white-space:nowrap;"></span>
+        <span class="zoom-field">
+          <input id="zoomInput" class="mono" type="text" inputmode="numeric" autocomplete="off" value="100"
+                 data-i18n-title="zoomFieldTitle" title="Skrifaðu prósentutölu og ýttu á Enter"
+                 data-i18n-aria="zoomFieldAria" aria-label="Aðdráttur í prósentum">
+          <span aria-hidden="true">%</span>
+        </span>
         <button id="zoomIn" data-i18n-title="zoomInTitle" title="Stækka reiti">+</button>
         <button id="fitBtn" class="icon-btn" data-i18n-title="fitTitle" title="Passa mynstrið á skjáinn" data-i18n-aria="fitBtn" aria-label="Passa á skjá">
           <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M6.6 2.8H3.4a.6.6 0 0 0-.6.6v3.2"/><path d="M11.4 2.8h3.2a.6.6 0 0 1 .6.6v3.2"/><path d="M6.6 15.2H3.4a.6.6 0 0 1-.6-.6v-3.2"/><path d="M11.4 15.2h3.2a.6.6 0 0 0 .6-.6v-3.2"/></svg>
@@ -715,6 +742,7 @@
         </button>
       </section>
 
+      <div class="menu-cluster">
       <details class="settings-toggle gen-toggle" id="genToggleDetails">
         <summary><svg class="menu-ico" viewBox="0 0 18 18" aria-hidden="true"><path d="M7.4 2.4l1.2 3.2 3.2 1.2-3.2 1.2-1.2 3.2-1.2-3.2L3 6.8l3.2-1.2z"/><path d="M13.4 10.2l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z"/></svg><span data-i18n="genToggleLabel">Búa til mynstur</span></summary>
         <div class="gen-toggle-content">
@@ -955,6 +983,21 @@
           </section>
         </div>
       </details>
+      </div>
+    </div>
+    <div class="toolbar-row sel-row gen-hidden" id="selectionRow">
+      <section class="tool-group sel-bar" id="selectionBar" aria-label="Valið svæði">
+        <span class="group-label" id="selectionHint" data-i18n="selHintArea">Valið svæði</span>
+        <button id="selCopyBtn" class="small" data-i18n="selCopyBtn">Afrita</button>
+        <button id="selCutBtn" class="small" data-i18n="selCutBtn">Klippa</button>
+        <button id="selDeleteBtn" class="small ghost-danger" data-i18n="selDeleteBtn">Eyða</button>
+        <button id="pasteBtn" class="small primary gen-hidden" data-i18n="pasteBtn">Líma</button>
+        <button id="stampFlipHBtn" class="small gen-hidden" data-i18n="stampFlipHBtn">Spegla ↔</button>
+        <button id="stampFlipVBtn" class="small gen-hidden" data-i18n="stampFlipVBtn">Spegla ↕</button>
+        <button id="stampRotateBtn" class="small gen-hidden" data-i18n="stampRotateBtn">Snúa 90°</button>
+        <button id="stampPlaceBtn" class="small primary gen-hidden" data-i18n="stampPlaceBtn">Setja hér</button>
+        <button id="selCancelBtn" class="small" data-i18n="selCancelBtn">Hætta við</button>
+      </section>
     </div>
   </div>
 
@@ -1265,14 +1308,14 @@
 
   /* ---------------- dom refs ---------------- */
   var el = {};
-  ["patternName","widthInput","heightInput","sizeGroup","aidaCount","fabricSize","marginInput","fabricCut","zoomOut","zoomIn","zoomLabel","actualSizeBtn",
+  ["patternName","widthInput","heightInput","sizeGroup","aidaCount","fabricSize","marginInput","fabricCut","zoomOut","zoomIn","zoomInput","actualSizeBtn",
    "shapeSwitch","hoopSizeWrap","hoopSize","mirrorSwitch",
    "calibrateToggleBtn","calibrateBox","calibrateBar","calibrateInput","calibrateSaveBtn","calibrateStatus",
    "bgColorInput","coordsToggle",
    "symbolsToggle","printToggle","toolDraw","toolErase","toolBackstitch","undoBtn","redoBtn","clearBtn",
    "toolFill","toolLine","toolRect","toolPick","fitBtn","stitchViewBtn",
    "flipHBtn","flipVBtn","rotateBtn","centerBtn",
-   "toolSelect","selectionBar","selectionHint","selCopyBtn","selCutBtn","selDeleteBtn",
+   "toolSelect","selectionBar","selectionRow","selectionHint","selCopyBtn","selCutBtn","selDeleteBtn",
    "pasteBtn","stampFlipHBtn","stampFlipVBtn","stampRotateBtn","stampPlaceBtn","selCancelBtn",
    "paletteGrid","selectedSwatch","selectedCode","selectedName",
    "palettePanel","summarySwatch","summaryCode",
@@ -1334,7 +1377,8 @@
       progressRemaining: "{n} eftir",
       progressDoneWord: "búið",
       fitBtn: "Passa á skjá",
-      zoomLabel: "{p}%",
+      zoomFieldTitle: "Skrifaðu prósentutölu og ýttu á Enter — 100% er raunstærð",
+      zoomFieldAria: "Aðdráttur í prósentum",
       genToggleLabel: "Búa til mynstur",
       moreSettingsLabel: "Fleiri stillingar",
       saveToggleLabel: "Vista",
@@ -1469,7 +1513,7 @@
       helpSecSize: "Stærð, striginn og hringurinn",
       helpSecSheet: "Útlit blaðsins",
       helpSecPdf: "Hvað er í PDF-inu",
-      helpChartFlow: "Stækkunin er í stikunni: − og + stækka reitina, ramminn passar mynstrið á skjáinn og „Raunstærð“ undir Fleiri stillingum sýnir það í réttri stærð miðað við strigann.",
+      helpChartFlow: "Stækkunin er í stikunni: − og + stækka reitina, ramminn passar mynstrið á skjáinn og „Raunstærð“ undir Fleiri stillingum sýnir það í réttri stærð miðað við strigann. Prósentutalan milli − og + er líka reitur sem má skrifa í: sláðu inn tölu og ýttu á Enter til að fara beint í þá stækkun — 100% er raunstærð.",
       helpSizeFlow: "Stærð netsins stillirðu annaðhvort undir Fleiri stillingum eða efst í myndaglugganum — það eru sömu reitirnir. Aida-taldningin segir hve mörg spor eru á tommu og ræður því hvað mynstrið mælist í sentimetrum; „Saumfar“ bætir við spássíu allan hringinn og segir þér hve stóran bút á að klippa. Veljirðu útsaumshring í staðinn fyrir rétthyrning ræður hringstærðin netinu og hornin eru falin — þau koma öll til baka þegar þú skiptir aftur yfir í rétthyrning. Neðst er „Kvarða skjá“ ef raunstærðin á að vera nákvæm á þínum skjá.",
       helpSheetFlow: "Undir Fleiri stillingum: „Tákn á reitum“ setur lítið merki — hring, þríhyrning, tígul og svo framvegis — í hvern reit svo hægt sé að sauma eftir svarthvítu blaði; sama merki stendur fyrir þráðinn í litaskránni og í PDF-inu, „Prenthamur“ tekur alla liti af, „Röð- og dálkanúmer“ setja tölur á kantana og „Bakgrunnslitur“ er liturinn á striganum sjálfum. Dökki krossinn um miðjuna er alltaf sýnilegur og segir þér hvar miðja mynstursins er.",
       helpPdfFlow: "PDF-ið er saumblaðið sjálft: fyrst yfirlit yfir allt mynstrið, svo örkin eða arkirnar í stærð sem hægt er að sauma eftir, með röð- og dálkanúmerum á köntunum. Aftast er litaskráin — hver þráður með sínu tákni og fjölda spora, og garnþörfin í metrum. Þar eru alltaf rúður og tákn, líka þótt þú sért að skoða mynstrið saumað á skjánum.",
@@ -1591,7 +1635,8 @@
       progressRemaining: "{n} left",
       progressDoneWord: "done",
       fitBtn: "Fit to screen",
-      zoomLabel: "{p}%",
+      zoomFieldTitle: "Type a percentage and press Enter — 100% is actual size",
+      zoomFieldAria: "Zoom, in percent",
       genToggleLabel: "Generate pattern",
       moreSettingsLabel: "More settings",
       saveToggleLabel: "Save",
@@ -1726,7 +1771,7 @@
       helpSecSize: "Size, fabric and hoop",
       helpSecSheet: "How the chart looks",
       helpSecPdf: "What is in the PDF",
-      helpChartFlow: "The zoom is in the toolbar: − and + change the size of the squares, the frame fits the pattern on screen, and \u201cactual size\u201d under More settings shows it at its true size on the fabric.",
+      helpChartFlow: "The zoom is in the toolbar: − and + change the size of the squares, the frame fits the pattern on screen, and \u201cactual size\u201d under More settings shows it at its true size on the fabric. The percentage between − and + is a box you can type in: put a number in it and press Enter to go straight to that zoom — 100% is actual size.",
       helpSizeFlow: "The size of the grid is set either under More settings or at the top of the photo pane — they are the same boxes. The aida count says how many stitches go to an inch and decides what the pattern measures in centimetres; \u201cmargin\u201d adds cloth all round and tells you how big a piece to cut. Choose the hoop instead of the rectangle and the hoop size decides the grid, with the corners hidden — they all come back when you switch to the rectangle again. At the bottom, \u201ccalibrate screen\u201d makes actual size exact on your own screen.",
       helpSheetFlow: "Under More settings: \u201csymbols on squares\u201d puts a little mark — a circle, a triangle, a diamond and so on — in every square so the pattern can be stitched from a black-and-white sheet; the same mark stands for that thread in the colour list and in the PDF, \u201cprint mode\u201d takes all the colour off, \u201crow and column numbers\u201d put figures along the edges, and \u201cbackground colour\u201d is the cloth itself. The dark cross through the middle is always there to show where the centre is.",
       helpPdfFlow: "The PDF is the working sheet: an overview of the whole pattern first, then the sheet or sheets at a size you can stitch from, with row and column numbers along the edges. At the back is the thread list — every thread with its symbol and stitch count, and how many metres of floss it takes. It always has the grid and the symbols, even while you are looking at the stitched view on screen.",
@@ -3548,6 +3593,9 @@
   function updateSelectionBar(){
     if (!el.selectionBar) return;
     var show = !!(selection || pendingStamp || clipboard);
+    // The bar has a line of its own, so showing it never pushes the menus
+    // off the end of the row above.
+    if (el.selectionRow) el.selectionRow.classList.toggle("gen-hidden", !show);
     el.selectionBar.classList.toggle("gen-hidden", !show);
     if (!show) return;
     var placing = !!pendingStamp, area = !!selection && !placing;
@@ -4016,13 +4064,48 @@
     var cmPerStitch = 2.54 / state.aidaCount;
     return state.pxPerCm * cmPerStitch;
   }
-  function updateZoomLabel(){
+  function zoomPercent(){
     var actual = actualCellPx();
     var pct = Math.round((state.cellSize / actual) * 100);
     // cellSize is exact (never rounded to a whole pixel), so "actual size" is
     // exactly 100% — this is only insurance against floating-point drift.
     if (Math.abs(state.cellSize - actual) < 0.01) pct = 100;
-    el.zoomLabel.textContent = t("zoomLabel", {p: pct});
+    return pct;
+  }
+  function updateZoomLabel(){
+    // While she is typing in the box, the zoom she is halfway through writing
+    // must not be overwritten by the one the chart is still at.
+    if (!el.zoomInput || document.activeElement === el.zoomInput) return;
+    el.zoomInput.value = String(zoomPercent());
+  }
+  /* The percentage is not only a reading: type one in and the chart goes
+     there. Anything the zoom limits will not allow is pulled back inside
+     them, and the box then shows where it actually landed. */
+  function applyZoomInput(){
+    if (!el.zoomInput) return;
+    var typed = String(el.zoomInput.value).replace(",", ".").replace(/[%\s]/g, "");
+    var pct = parseFloat(typed);
+    if (!isFinite(pct) || pct <= 0){
+      el.zoomInput.value = String(zoomPercent());   // nonsense: put the old number back
+      return;
+    }
+    setZoom(actualCellPx() * (pct / 100));
+    el.zoomInput.value = String(zoomPercent());
+  }
+  if (el.zoomInput){
+    el.zoomInput.addEventListener("focus", function(){ el.zoomInput.select(); });
+    el.zoomInput.addEventListener("change", applyZoomInput);
+    el.zoomInput.addEventListener("keydown", function(ev){
+      if (ev.key === "Enter"){
+        ev.preventDefault();
+        applyZoomInput();
+        el.zoomInput.blur();
+      } else if (ev.key === "Escape"){
+        ev.preventDefault();
+        el.zoomInput.value = String(zoomPercent());
+        el.zoomInput.blur();
+      }
+    });
   }
   function setZoom(v){
     // Keep cellSize as an exact (fractional) value rather than rounding to a
