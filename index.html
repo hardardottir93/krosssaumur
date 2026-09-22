@@ -219,7 +219,12 @@
      that wraps onto several lines turns into an odd lumpy oval — so here
      each tool-group becomes a plain full-width rounded card instead, which
      stays tidy no matter how its contents wrap. */
-  .settings-toggle .settings-content.toolbar-row{ flex-direction:column; align-items:stretch; gap:10px; }
+  /* nowrap matters: the row it inherits from wraps, and a wrapping *column*
+     with a capped height spills into a second column off to the right,
+     which is what put half the panel out of sight in a short window. */
+  .settings-toggle .settings-content.toolbar-row{
+    flex-direction:column; flex-wrap:nowrap; align-items:stretch; gap:10px; overflow-x:hidden;
+  }
   .settings-toggle .settings-content .tool-group{ width:100%; border-radius:12px; }
 
   .quick-settings{ display:flex; align-items:center; gap:8px; }
@@ -439,6 +444,36 @@
   .legend-name .en{ color:var(--ink-soft); }
   .legend-count{ font-family:"IBM Plex Mono",monospace; }
   .legend-empty{ font-size:.82rem; color:var(--ink-soft); }
+
+  /* ---------- keeping track of what is already stitched ----------
+     A second way of looking at the same chart: instead of drawing, a click
+     ticks a square off as sewn. The bar and the counts live above the thread
+     list, and every thread row gets its own tick button. */
+  .progress-box{ margin:0 0 10px; display:flex; flex-direction:column; gap:6px; }
+  .progress-track{
+    height:8px; border-radius:999px; background:var(--linen);
+    border:1px solid var(--line); overflow:hidden;
+  }
+  .progress-fill{
+    display:block; height:100%; width:0%; background:var(--accent-2);
+    transition:width .18s;
+  }
+  .progress-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .progress-row .mono{ font-size:.74rem; color:var(--ink-soft); }
+  .legend-row.has-progress{ grid-template-columns:20px 20px 1fr auto auto; }
+  .legend-row.has-progress.has-floss{ grid-template-columns:20px 20px 1fr auto auto auto; }
+  .legend-tick{
+    width:27px; height:24px; padding:0; border-radius:6px; display:inline-flex;
+    align-items:center; justify-content:center; color:var(--ink-soft);
+  }
+  .legend-tick:hover{ color:var(--ink); }
+  .legend-tick svg{ width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; }
+  .legend-tick.done{ background:var(--accent-2); border-color:var(--accent-2); color:var(--accent-ink); }
+  .legend-row.thread-done .legend-name, .legend-row.thread-done .legend-count{ opacity:.45; }
+  :root.touch-input .legend-tick{ width:32px; height:30px; }
+  @media (pointer: coarse){ .legend-tick{ width:32px; height:30px; } }
+  /* In this mode the chart is not being drawn on, so the pointer says so. */
+  #gridCanvas.marking-done{ cursor:pointer; }
 
   /* ---------- save menu ---------- */
   .settings-toggle .save-content{ width:min(360px, 92vw); }
@@ -674,6 +709,9 @@
         </button>
         <button id="stitchViewBtn" class="icon-btn" data-i18n-title="stitchViewTitle" title="Sjá mynstrið eins og það kemur út saumað" data-i18n-aria="stitchViewBtn" aria-label="Sjá það saumað">
           <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3.6 3.6L8 8M8 3.6L3.6 8"/><path d="M10 10l4.4 4.4M14.4 10L10 14.4"/><path d="M2.2 9h13.6M9 2.2v13.6" stroke-dasharray="1.6 2.4" opacity=".45"/></svg>
+        </button>
+        <button id="progressBtn" class="icon-btn" data-i18n-title="progressTitle" title="Saumahamur — merktu reitina sem þú ert búin með" data-i18n-aria="progressBtn" aria-label="Saumahamur">
+          <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.6 9.1l2.3 2.3 4.5-4.9"/></svg>
         </button>
       </section>
 
@@ -962,6 +1000,13 @@
         <div class="legend-total mono" id="legendTotal">0 spor</div>
         <label><input type="checkbox" id="flossToggle"> <span data-i18n="flossToggleLabel">Garnþörf</span></label>
       </div>
+      <div class="progress-box gen-hidden" id="progressBox">
+        <div class="progress-track"><span class="progress-fill" id="progressFill"></span></div>
+        <div class="progress-row">
+          <span class="mono" id="progressLine"></span>
+          <button id="progressResetBtn" class="small" data-i18n="progressReset" data-i18n-title="progressResetTitle" title="Tekur allar merkingar af — mynstrið sjálft breytist ekki">Núllstilla</button>
+        </div>
+      </div>
       <div class="legend-list" id="legendList"></div>
       <details class="swap-box" id="swapBox">
         <summary data-i18n="swapHeading">Skipta um þráð</summary>
@@ -1182,6 +1227,10 @@
     tool: "draw",
     selectedColor: "3350",
     stitchView: false,
+    // Saumahamur: the chart is being stitched from rather than drawn on, and
+    // every square ticked off lives in `done` (same keys as `cells`).
+    progressOn: false,
+    done: {},
     symbolsOn: false,
     printOn: false,
     isSample: true,
@@ -1228,6 +1277,7 @@
    "paletteGrid","selectedSwatch","selectedCode","selectedName",
    "palettePanel","summarySwatch","summaryCode",
    "canvasScroll","canvasStack","gridCanvas","rulerCanvas",
+   "progressBtn","progressBox","progressLine","progressFill","progressResetBtn",
    "legendTotal","legendList","flossToggle","swapBox","swapFrom","swapTo","swapBtn","swapStatus","saveBtn","saveAsBtn","newBtn","exportBtn","exportPdfBtn",
    "savedList","dbStatus","exportFileBtn","importFileBtn","importFileInput","exportAllBtn",
    "genTabImage","genTabLetters","genImagePane","genLettersPane",
@@ -1275,6 +1325,14 @@
       fitTitle: "Passa mynstrið á skjáinn",
       stitchViewBtn: "Sjá það saumað",
       stitchViewTitle: "Sjá mynstrið eins og það kemur út saumað",
+      progressBtn: "Saumahamur",
+      progressTitle: "Saumahamur — merktu reitina sem þú ert búin með; smelltu aftur til að taka merkinguna af",
+      progressLine: "{done} af {total} · {pct}%",
+      progressReset: "Núllstilla",
+      progressResetTitle: "Tekur allar merkingar af — mynstrið sjálft breytist ekki",
+      progressThreadTitle: "Merkja allan þráðinn saumaðan",
+      progressRemaining: "{n} eftir",
+      progressDoneWord: "búið",
       fitBtn: "Passa á skjá",
       zoomLabel: "{p}%",
       genToggleLabel: "Búa til mynstur",
@@ -1406,6 +1464,8 @@
       helpMirrorFlow: "Teiknaðu einn fjórðung og hitt speglast sjálfkrafa um miðju blaðsins. Speglunin nær til pennans, fötunnar, línunnar, kassans og bakspora — líka þegar þú eyðir, og baksporslína tekur spegilmynd sína með sér. Bútur sem þú límir og texti sem þú setur niður lenda hins vegar bara þar sem þú smellir.",
       helpImageFlow: "Myndin fyllir allt netið og hver reitur fær næsta DMC-lit. „Fjöldi lita“ ræður hversu margir þræðir eru notaðir — allt frá einum upp í fjörutíu eða óheft; einn litur á mynd með gegnsæjum bakgrunni gefur skuggamynd af forminu. Birta og birtuskil teikna myndina upp á nýtt strax og „Núllstilla birtu“ setur þá aftur á núll, og „Bara þræðirnir mínir“ notar eingöngu þá þræði sem þú hefur merkt. Viljirðu frekar teikna sjálf eftir myndinni, hakaðu við „Hafa myndina undir netinu“ — þá liggur hún dauf undir og þú velur hvert spor. Hún fylgir hvorki mynstrinu né því sem þú sækir.",
       helpThreadsFlow: "Merktu þræðina sem þú átt í litaspjaldinu; þeir fá punkt og geymast áfram. „Skipta um þráð“ neðst í skránni skiptir einum þræði út fyrir annan alls staðar — veljir þú lit sem er þegar í mynstrinu renna þeir saman í einn.",
+      helpSecProgress: "Saumahamur",
+      helpProgressFlow: "Hnappurinn með hakinu, við hliðina á „Sjá það saumað“, setur mynstrið í saumaham. Þá teiknarðu ekki lengur heldur merkir: smelltu á reit sem þú ert búin með og hann fölnar undir haki, smelltu aftur (eða hægrismelltu) til að taka merkinguna af, og dragðu yfir til að merkja margar í röð. Í litaskránni stendur þá hvað er eftir af hverjum þræði og þar er hnappur til að haka heilan þráð við í einu, og efst er súla sem sýnir hve langt þú ert komin. Merkingarnar tilheyra mynstrinu og geymast með því, en þær koma hvorki í PNG-myndina né PDF-ið. „Núllstilla“ tekur þær allar af — mynstrið sjálft breytist ekki.",
       helpSecSize: "Stærð, striginn og hringurinn",
       helpSecSheet: "Útlit blaðsins",
       helpSecPdf: "Hvað er í PDF-inu",
@@ -1522,6 +1582,14 @@
       fitTitle: "Fit the pattern on screen",
       stitchViewBtn: "See it stitched",
       stitchViewTitle: "See the pattern as it comes out in thread",
+      progressBtn: "Stitching mode",
+      progressTitle: "Stitching mode — tick off the squares you have sewn; click again to take a tick back",
+      progressLine: "{done} of {total} · {pct}%",
+      progressReset: "Reset",
+      progressResetTitle: "Takes every tick off — the pattern itself is untouched",
+      progressThreadTitle: "Mark this whole thread as stitched",
+      progressRemaining: "{n} left",
+      progressDoneWord: "done",
       fitBtn: "Fit to screen",
       zoomLabel: "{p}%",
       genToggleLabel: "Generate pattern",
@@ -1653,6 +1721,8 @@
       helpMirrorFlow: "Draw one quarter and the rest is mirrored about the middle of the chart. It covers the pen, the bucket, the line, the box and backstitch — erasing too, and rubbing out a backstitch line takes its reflection with it. A pasted piece and placed text land only where you click.",
       helpImageFlow: "The photo fills the whole grid and every stitch gets its nearest DMC colour. \u201cNumber of colours\u201d decides how many threads are used — anything from one to forty, or no limit; one colour on a picture with a see-through background gives a silhouette of the shape. Brightness and contrast redraw it at once and \u201creset brightness\u201d puts them back to nothing, and \u201conly my threads\u201d uses just the ones you have marked. To draw it by hand instead, tick \u201ckeep the photo under the grid\u201d — it then lies faintly underneath and you pick every stitch. It is part of neither the pattern nor anything you download.",
       helpThreadsFlow: "Mark the threads you own in the palette; they get a dot and are remembered. \u201cSwap a thread\u201d at the bottom of the list replaces one thread with another everywhere — pick one already in the pattern and the two merge into one.",
+      helpSecProgress: "Stitching mode",
+      helpProgressFlow: "The tick button beside “see it stitched” puts the chart into stitching mode. You are no longer drawing but marking: click a square you have sewn and it fades under a tick, click it again (or right-click) to take the tick back, and drag across to mark a run of them. The thread list then says how many squares are left in each colour and carries a button to tick off a whole thread at once, and a bar at the top shows how far along you are. The ticks belong to the pattern and are saved with it, but they stay out of the PNG and the PDF. “Reset” takes them all off — the pattern itself is untouched.",
       helpSecSize: "Size, fabric and hoop",
       helpSecSheet: "How the chart looks",
       helpSecPdf: "What is in the PDF",
@@ -2263,10 +2333,33 @@
      a shade darker where the threads cross, on an aida weave instead of a
      ruled grid. Nothing about the pattern changes; it is only a way of
      looking at it. */
+  /* A square already sewn is veiled over and ticked, so what is left stands
+     out. It is only a mark on the view — the stitch underneath is untouched,
+     and nothing of this reaches the printed sheet. */
+  function drawDoneMark(targetCtx, px, py, cs, bg){
+    var pale = luminance(bg) > 0.5;
+    targetCtx.save();
+    targetCtx.fillStyle = pale ? "rgba(255,255,255,.72)" : "rgba(0,0,0,.6)";
+    targetCtx.fillRect(px, py, cs, cs);
+    if (cs >= 7){
+      targetCtx.strokeStyle = pale ? "rgba(46,92,78,.85)" : "rgba(190,235,215,.9)";
+      targetCtx.lineWidth = Math.max(1, cs*0.13);
+      targetCtx.lineCap = "round";
+      targetCtx.lineJoin = "round";
+      targetCtx.beginPath();
+      targetCtx.moveTo(px + cs*0.24, py + cs*0.52);
+      targetCtx.lineTo(px + cs*0.43, py + cs*0.72);
+      targetCtx.lineTo(px + cs*0.78, py + cs*0.29);
+      targetCtx.stroke();
+    }
+    targetCtx.restore();
+  }
+
   function paintStitched(targetCtx, w, h, cs, opts){
     var ox = opts.ox || 0, oy = opts.oy || 0;
     var bg = opts.bgColor || "#ffffff";
     var dark = luminance(bg) < 0.5;
+    var showDone = !!opts.showDone;
 
     targetCtx.fillStyle = bg;
     targetCtx.fillRect(0, 0, w*cs, h*cs);
@@ -2304,6 +2397,7 @@
         targetCtx.beginPath();
         targetCtx.moveTo(x1, y0); targetCtx.lineTo(x0, y1);
         targetCtx.stroke();
+        if (showDone && state.done[(x+ox)+"-"+(y+oy)]) drawDoneMark(targetCtx, x*cs, y*cs, cs, bg);
       }
     }
 
@@ -2356,6 +2450,7 @@
       paintStitched(targetCtx, w, h, cs, opts);
       return;
     }
+    var showDone = !!opts.showDone;
     var showSymbols = opts.forceSymbols != null ? opts.forceSymbols : (state.symbolsOn || printMode);
     var minorColor = opts.minorColor || "#ddd0b6";
     var majorColor = opts.majorColor || "#b7a37e";
@@ -2390,6 +2485,7 @@
             var box = cs*0.68;
             drawSymbolCanvas(targetCtx, symMap[code], px + (cs-box)/2, py + (cs-box)/2, box, inkColor);
           }
+          if (showDone && state.done[(x+ox)+"-"+(y+oy)]) drawDoneMark(targetCtx, px, py, cs, bg);
         } else if (!seeThrough){
           targetCtx.fillStyle = bg;
           targetCtx.fillRect(px,py,cs,cs);
@@ -2539,7 +2635,7 @@
     paintChart(ctx, state.width, state.height, cs, {
       printMode: state.printOn, forceSymbols: state.symbolsOn || state.printOn,
       minorColor: minorColor, majorColor: majorColor, bgColor: state.bgColor,
-      transparentBg: trace
+      transparentBg: trace, showDone: state.progressOn
     });
     // The line/box being dragged out right now — drawn on top of the live
     // chart only, so it never reaches the saved pattern or an export.
@@ -2670,14 +2766,78 @@
     setGenStatus(el.swapStatus, "swapDone", "ok", {n: n, from: from, to: to});
   });
 
+  /* ---------------- saumahamur: keeping track of what is sewn ----------------
+     The same chart, read rather than drawn on: a square that has been stitched
+     is ticked off and veiled over, so what is left is what stands out. The
+     ticks belong to the pattern (they are saved and come back with it) but
+     they never reach the PNG or the PDF — those stay the clean working sheet. */
+  function doneTotals(){
+    var done = 0, total = 0;
+    Object.keys(state.cells).forEach(function(k){ total++; if (state.done[k]) done++; });
+    return { done: done, total: total };
+  }
+  // The ticks are kept by position, so anything that moves the pattern about
+  // has to move them with it — otherwise they would end up on the wrong
+  // squares. Returning null for a square drops its tick.
+  function remapDone(fn){
+    var moved = {};
+    Object.keys(state.done).forEach(function(k){
+      var p = k.split("-");
+      var q = fn(+p[0], +p[1]);
+      if (q) moved[q[0] + "-" + q[1]] = 1;
+    });
+    state.done = moved;
+  }
+  function updateProgressBox(){
+    if (!el.progressBox) return;
+    el.progressBox.classList.toggle("gen-hidden", !state.progressOn);
+    if (!state.progressOn) return;
+    var sum = doneTotals();
+    var pct = sum.total ? Math.round((sum.done / sum.total) * 100) : 0;
+    if (el.progressFill) el.progressFill.style.width = pct + "%";
+    if (el.progressLine) el.progressLine.textContent = t("progressLine", {done: sum.done, total: sum.total, pct: pct});
+  }
+  function setProgressMode(on){
+    state.progressOn = !!on;
+    if (el.progressBtn) el.progressBtn.classList.toggle("active", state.progressOn);
+    if (el.gridCanvas) el.gridCanvas.classList.toggle("marking-done", state.progressOn);
+    // Nothing should be hanging off the pointer while squares are being ticked.
+    if (state.progressOn){ cancelStamp(); clearSelection(); updateSelectionBar(); }
+    renderCanvas();
+  }
+  function markDoneAt(cell, on){
+    var key = cell.x + "-" + cell.y;
+    if (!state.cells[key]) return false;          // an empty square is nothing to sew
+    if (!!state.done[key] === !!on) return false; // already the way it should be
+    if (on) state.done[key] = 1; else delete state.done[key];
+    return true;
+  }
+  function setThreadDone(code, on){
+    Object.keys(state.cells).forEach(function(k){
+      if (state.cells[k] !== code) return;
+      if (on) state.done[k] = 1; else delete state.done[k];
+    });
+    renderCanvas();
+  }
+  if (el.progressBtn) el.progressBtn.addEventListener("click", function(){
+    setProgressMode(!state.progressOn);
+  });
+  if (el.progressResetBtn) el.progressResetBtn.addEventListener("click", function(){
+    state.done = {};
+    renderCanvas();
+  });
+
   function renderLegend(){
     var counts = {};
+    var doneCounts = {};
     var total = 0;
     Object.keys(state.cells).forEach(function(k){
       var code = state.cells[k];
       counts[code] = (counts[code]||0) + 1;
+      if (state.done[k]) doneCounts[code] = (doneCounts[code]||0) + 1;
       total++;
     });
+    updateProgressBox();
     el.legendTotal.textContent = t("stitchesAndColors", {total: total, colors: Object.keys(counts).length});
     var symMap = computeSymbolMap(state.cells);
     var rows = Object.keys(counts).map(function(c){ return {code:c, n:counts[c]}; })
@@ -2693,20 +2853,40 @@
     var grandCm = 0;
     rows.forEach(function(r){
       var p = colorFor(r.code);
+      var threadDone = doneCounts[r.code] || 0;
+      var allDone = state.progressOn && threadDone >= r.n;
       var row = document.createElement("div");
-      row.className = "legend-row" + (state.showFloss ? " has-floss" : "");
+      row.className = "legend-row" + (state.showFloss ? " has-floss" : "") +
+                      (state.progressOn ? " has-progress" : "") + (allDone ? " thread-done" : "");
+      // In saumahamur the number that matters is how many squares are left.
+      var countText = state.progressOn
+        ? (allDone ? t("progressDoneWord") : t("progressRemaining", {n: r.n - threadDone}))
+        : String(r.n);
       var html =
         '<span class="legend-swatch" style="background:'+(p?p.h:"#ccc")+'"></span>' +
         '<span class="legend-symbol">'+(symMap[r.code] != null ? symbolSvg(symMap[r.code], 12) : "")+'</span>' +
-        '<span class="legend-name"><span class="code mono">'+r.code+'</span> <span class="en">'+(p?p.n:"")+'</span></span>' +
-        '<span class="legend-count mono">'+r.n+'</span>';
+        // In saumahamur the row has a tick button too, so the thread's English
+        // name steps aside — the number is what is being read at the needle.
+        '<span class="legend-name"><span class="code mono">'+r.code+'</span>' +
+        (state.progressOn ? '' : ' <span class="en">'+(p?p.n:"")+'</span>') + '</span>' +
+        '<span class="legend-count mono">'+countText+'</span>';
       if (state.showFloss){
         var cm = r.n * perStitchCm;
         grandCm += cm;
         var skeins = Math.max(1, Math.ceil(cm / 800));
         html += '<span class="legend-floss mono">'+t("flossLine", {cm: Math.round(cm), skeins: skeins})+'</span>';
       }
+      if (state.progressOn){
+        html += '<button type="button" class="legend-tick small' + (allDone ? " done" : "") + '">' +
+                '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.6 7.4l3 3 5.8-6.6"/></svg></button>';
+      }
       row.innerHTML = html;
+      var tick = row.querySelector(".legend-tick");
+      if (tick){
+        tick.title = t("progressThreadTitle");
+        tick.setAttribute("aria-label", t("progressThreadTitle"));
+        tick.addEventListener("click", function(){ setThreadDone(r.code, !allDone); });
+      }
       el.legendList.appendChild(row);
     });
     if (state.showFloss){
@@ -2825,7 +3005,7 @@
   // stitches into a grid that stayed the new size.
   function snapshot(){
     return JSON.stringify({
-      cells: state.cells, backstitches: state.backstitches,
+      cells: state.cells, backstitches: state.backstitches, done: state.done,
       width: state.width, height: state.height,
       clipped: state.clipped, clippedBack: state.clippedBack,
       shape: state.shape, hoopCm: state.hoopCm, rectSize: state.rectSize
@@ -2835,6 +3015,7 @@
     var snap = JSON.parse(str);
     state.cells = snap.cells || {};
     state.backstitches = snap.backstitches || [];
+    state.done = snap.done || {};
     state.clipped = snap.clipped || {};
     state.clippedBack = snap.clippedBack || [];
     state.rectSize = snap.rectSize || null;
@@ -2873,6 +3054,9 @@
   }
 
   var painting = false;
+  // Which way a run of ticks is going: the first square decides, the rest of
+  // the drag follows it, so a finger dragged across a row does one thing.
+  var doneStroke = true;
   var backstitchLast = null;
   // While a line or a box is being dragged out, the cells it would cover are
   // held here and drawn as a translucent preview instead of being committed.
@@ -2900,7 +3084,8 @@
       if (p[0] < 0 || p[1] < 0 || p[0] >= state.width || p[1] >= state.height) return;
       if (!inShape(p[0], p[1])) return;
       var key = p[0] + "-" + p[1];
-      if (erase) delete state.cells[key];
+      // A square that is taken out takes its "already sewn" tick with it.
+      if (erase){ delete state.cells[key]; delete state.done[key]; }
       else state.cells[key] = state.selectedColor;
     });
   }
@@ -2932,7 +3117,7 @@
       seen[k] = 1;
       if (!inShape(x,y)) continue;
       if (state.cells[k] !== target) continue;
-      if (color) state.cells[k] = color; else delete state.cells[k];
+      if (color) state.cells[k] = color; else { delete state.cells[k]; delete state.done[k]; }
       filled++;
       stack.push([x+1,y]); stack.push([x-1,y]); stack.push([x,y+1]); stack.push([x,y-1]);
     }
@@ -3157,6 +3342,18 @@
       placeStamp();
       return;
     }
+    // Saumahamur takes the click before any drawing tool: nothing is added to
+    // the pattern here, the square is only ticked off as sewn (or un-ticked).
+    if (state.progressOn){
+      var doneCell = cellFromEvent(ev);
+      if (!doneCell) return;
+      doneStroke = !(ev.button === 2 || ev.ctrlKey || state.done[doneCell.x + "-" + doneCell.y]);
+      markDoneAt(doneCell, doneStroke);
+      painting = true;
+      el.gridCanvas.setPointerCapture(ev.pointerId);
+      scheduleRender();
+      return;
+    }
     if (state.tool === "select"){
       var sc = rawCellFromEvent(ev);
       selDrag = { ax: sc.x, ay: sc.y, bx: sc.x, by: sc.y };
@@ -3258,6 +3455,11 @@
       return;
     }
     if (!painting) return;
+    if (state.progressOn){
+      var dragDone = cellFromEvent(ev);
+      if (dragDone && markDoneAt(dragDone, doneStroke)) scheduleRender();
+      return;
+    }
     if (state.tool === "select" && selDrag){
       var dc = rawCellFromEvent(ev);
       selDrag.bx = dc.x; selDrag.by = dc.y;
@@ -3381,7 +3583,11 @@
   }
   function eraseSelection(sel){
     for (var y = 0; y < sel.h; y++){
-      for (var x = 0; x < sel.w; x++) delete state.cells[(sel.x + x) + "-" + (sel.y + y)];
+      for (var x = 0; x < sel.w; x++){
+        var k = (sel.x + x) + "-" + (sel.y + y);
+        delete state.cells[k];
+        delete state.done[k];
+      }
     }
     state.backstitches = state.backstitches.filter(function(sg){
       return !(Math.min(sg.x1, sg.x2) >= sel.x && Math.max(sg.x1, sg.x2) <= sel.x + sel.w &&
@@ -3556,6 +3762,8 @@
     ["erase", "toolErase"], ["pick", "toolPick"], ["select", "toolSelect"]
   ];
   function setTool(name){
+    // Reaching for a drawing tool means she is back to designing.
+    if (state.progressOn) setProgressMode(false);
     if (name !== "select"){ clearSelection(); updateSelectionBar(); }
     state.tool = name;
     TOOL_BUTTONS.forEach(function(pair){
@@ -3574,7 +3782,7 @@
   });
   el.undoBtn.addEventListener("click", undo);
   if (el.redoBtn) el.redoBtn.addEventListener("click", redo);
-  el.clearBtn.addEventListener("click", function(){ pushUndo(); state.cells = {}; state.backstitches = []; state.clipped = {}; state.clippedBack = []; state.rectSize = null; lastGenImage = null; dismissSample(); renderCanvas(); });
+  el.clearBtn.addEventListener("click", function(){ pushUndo(); state.cells = {}; state.backstitches = []; state.done = {}; state.clipped = {}; state.clippedBack = []; state.rectSize = null; lastGenImage = null; dismissSample(); renderCanvas(); });
   window.addEventListener("keydown", function(ev){
     var typing = /^(INPUT|TEXTAREA|SELECT)$/.test((ev.target && ev.target.tagName) || "");
     if ((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase() === "z"){
@@ -3615,6 +3823,7 @@
       newCells[(state.width-1-x)+"-"+y] = state.cells[k];
     });
     state.cells = newCells;
+    remapDone(function(x, y){ return [state.width-1-x, y]; });
     state.backstitches = state.backstitches.map(function(s){
       return { x1: state.width-s.x1, y1: s.y1, x2: state.width-s.x2, y2: s.y2, color: s.color };
     });
@@ -3628,6 +3837,7 @@
       newCells[x+"-"+(state.height-1-y)] = state.cells[k];
     });
     state.cells = newCells;
+    remapDone(function(x, y){ return [x, state.height-1-y]; });
     state.backstitches = state.backstitches.map(function(s){
       return { x1: s.x1, y1: state.height-s.y1, x2: s.x2, y2: state.height-s.y2, color: s.color };
     });
@@ -3645,6 +3855,7 @@
     var newBack = state.backstitches.map(function(s){
       return { x1: state.height-s.y1, y1: s.x1, x2: state.height-s.y2, y2: s.x2, color: s.color };
     });
+    remapDone(function(x, y){ return [state.height-1-y, x]; });
     state.width = newW; state.height = newH; state.cells = newCells; state.backstitches = newBack;
     el.widthInput.value = state.width; el.heightInput.value = state.height;
     resizeCanvas(); renderCanvas(); updateFabricSize(); updateZoomLabel();
@@ -3666,6 +3877,10 @@
       if (x >= 0 && y >= 0 && x < w && y < h) moved[x + "-" + y] = state.cells[k];
     });
     state.cells = moved;
+    remapDone(function(x, y){
+      var nx = x + dx, ny = y + dy;
+      return (nx >= 0 && ny >= 0 && nx < w && ny < h) ? [nx, ny] : null;
+    });
     var movedClipped = {};
     Object.keys(state.clipped).forEach(function(k){
       var p = k.split("-"), x = +p[0] + dx, y = +p[1] + dy;
@@ -3751,6 +3966,7 @@
         if (x < w && y < h) newCells[k] = state.cells[k];
       });
       state.cells = newCells;
+      remapDone(function(x, y){ return (x < w && y < h) ? [x, y] : null; });
     }
     state.backstitches = state.backstitches.filter(function(s){
       return s.x1<=w && s.y1<=h && s.x2<=w && s.y2<=h;
@@ -3925,6 +4141,7 @@
     clearDraft();
     state.cells = {};
     state.backstitches = [];
+    state.done = {};
     state.name = "";
     state.currentPatternId = null;
     el.patternName.value = "";
@@ -3996,6 +4213,28 @@
     }
     return (entry && entry.cells) || {};
   }
+  /* The "already sewn" ticks travel with the pattern, in the same compact
+     one-string-per-row shape as the stitches themselves. */
+  function encodeDone(){
+    if (!Object.keys(state.done).length) return null;
+    var rows = [];
+    for (var y=0; y<state.height; y++){
+      var row = "";
+      for (var x=0; x<state.width; x++) row += state.done[x+"-"+y] ? "#" : ".";
+      rows.push(row);
+    }
+    return rows;
+  }
+  function decodeDone(entry){
+    var out = {};
+    if (!entry || !Array.isArray(entry.done)) return out;
+    for (var y=0; y<entry.done.length; y++){
+      var row = entry.done[y];
+      if (typeof row !== "string") continue;
+      for (var x=0; x<row.length; x++) if (row.charAt(x) === "#") out[x+"-"+y] = 1;
+    }
+    return out;
+  }
   /* ---------------- the working draft ----------------
      Patterns are only in the saved list once you press save, so anything
      drawn since then would be lost if the browser closed. A copy of the work
@@ -4056,6 +4295,8 @@
     };
     if (packed.rows){ doc.colors = packed.colors; doc.rows = packed.rows; }
     else doc.cells = packed.cells;
+    var doneRows = encodeDone();
+    if (doneRows) doc.done = doneRows;
     return doc;
   }
 
@@ -4087,6 +4328,7 @@
     state.clipped = {}; state.clippedBack = []; state.rectSize = null;
     state.width = data.width; state.height = data.height;
     state.cells = decodeCells(data);
+    state.done = decodeDone(data);
     state.backstitches = data.backstitches || [];
     state.aidaCount = data.aidaCount || 14;
     // Older saved patterns have no shape — those are rectangular.
@@ -4708,6 +4950,8 @@
   function regenerateFromImage(){
     if (!lastGenImage) return false;
     state.cells = cellsFromImage(lastGenImage, state.width, state.height, imageOptions());
+    // Every square is laid out afresh, so old ticks would mean nothing.
+    state.done = {};
     setGenStatus(el.genImageStatus, "imgReady", "ok", {n: Object.keys(state.cells).length});
     return true;
   }
@@ -4745,6 +4989,7 @@
       var cells = cellsFromImage(img, state.width, state.height, imageOptions());
       state.cells = cells;
       state.backstitches = [];
+      state.done = {};
       state.clipped = {}; state.clippedBack = []; state.rectSize = null;
       state.currentPatternId = null;
       state.isSample = false;
@@ -5528,6 +5773,7 @@
     { h: "helpSecMirror", text: "helpMirrorFlow" },
     { h: "helpSecImage", text: "helpImageFlow" },
     { h: "helpSecThreads", text: "helpThreadsFlow" },
+    { h: "helpSecProgress", text: "helpProgressFlow" },
     { h: "helpSecSize", text: "helpSizeFlow" },
     { h: "helpSecSheet", text: "helpSheetFlow" },
     { h: "helpSecSave", text: "helpSaveFlow" },
@@ -5673,5 +5919,6 @@
   start();
 })();
 </script>
+
 </body>
 </html>
