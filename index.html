@@ -840,7 +840,6 @@
                   <input type="number" id="lettersLineGap" min="0" max="12" value="2" style="width:62px;border:1px solid var(--line);background:var(--linen);color:var(--ink);border-radius:6px;padding:5px 6px;font-family:'IBM Plex Mono',monospace;">
                 </label>
               </div>
-              <button class="primary" id="lettersAddBtn" data-i18n="lettersAddBtn" data-i18n-title="lettersPlaceTitle" title="Textinn eltir bendilinn — smelltu þar sem hann á að vera">Bæta texta við</button>
               <p class="gen-status" id="lettersStatus"></p>
             </div>
           </div>
@@ -1329,7 +1328,7 @@
    "traceToggle","traceOpacity","traceOpacityVal",
    "genWidth","genHeight","genSizeField",
    "myThreadsOnly","myThreadsEditBtn","myThreadsCount",
-   "lettersInput","lettersFont","lettersHeight","lettersLineGap","lettersAddBtn","lettersStatus",
+   "lettersInput","lettersFont","lettersHeight","lettersLineGap","lettersStatus",
    "langSwitch","themeSwitch","helpBtn","helpOverlay","helpBody","helpCloseBtn","genToggleDetails","moreToggleDetails","saveToggleDetails"
    ].forEach(function(id){ el[id] = document.getElementById(id); });
 
@@ -1403,7 +1402,6 @@
       genCropEnd: "Neðst / hægra megin",
       lettersInputPlaceholder: "T.d. „Amma Sigga“ — ein lína fyrir hverja línu í mynstrinu",
       lettersLineGapLabel: "Bil milli lína",
-      lettersPlaceTitle: "Textinn eltir bendilinn — smelltu þar sem hann á að vera",
       lettersFontSiena: "Mjótt",
       lettersFontScript: "Tengiskrift",
       lettersFontSerif: "Serif",
@@ -1411,7 +1409,6 @@
       lettersFontStitch: "Bakspor",
       lettersFontLabel: "Skrift",
       lettersHeightLabel: "Hæð stafa",
-      lettersAddBtn: "Bæta texta við",
       flipHTitle: "Spegla mynstrið lárétt",
       flipHBtn: "Spegla lárétt",
       flipVTitle: "Spegla mynstrið lóðrétt",
@@ -1508,7 +1505,7 @@
       helpKeyRedo: "Ctrl/⌘ + Shift + Z",
       helpRedo: "Endurtaka það sem var afturkallað",
       helpSelectFlow: "Dragðu ramma um svæði, veldu svo Afrita, Klippa eða Eyða. Bútinn má spegla og snúa um 90° áður en þú smellir þar sem hann á að lenda. Líma setur sama bútinn niður aftur, eins oft og þú vilt, og Ctrl/\u2318 + C, X og V virka líka. „Hætta við“ — eða Esc — hættir við allt saman og hendir bútnum, og þá fer stikan af skjánum.",
-      helpTextFlow: "Hver lína í textareitnum verður ein lína í mynstrinu og þær miðjast hver yfir aðra. „Bæta texta við“ lætur textann elta bendilinn — smelltu þar sem hann á að vera.",
+      helpTextFlow: "Hver lína í textareitnum verður ein lína í mynstrinu og þær miðjast hver yfir aðra. Textinn eltir bendilinn um leið og þú skrifar — smelltu á mynstrið þar sem hann á að lenda, eða notaðu „Setja hér“. Skiptirðu um skrift, hæð stafa eða þráð breytist hann strax undir bendlinum, og netið stækkar ekki þótt textinn sé of stór; þá segir glugginn þér frá því.",
       helpMirrorFlow: "Teiknaðu einn fjórðung og hitt speglast sjálfkrafa um miðju blaðsins. Speglunin nær til pennans, fötunnar, línunnar, kassans og bakspora — líka þegar þú eyðir, og baksporslína tekur spegilmynd sína með sér. Bútur sem þú límir og texti sem þú setur niður lenda hins vegar bara þar sem þú smellir.",
       helpImageFlow: "Myndin fyllir allt netið og hver reitur fær næsta DMC-lit. „Fjöldi lita“ ræður hversu margir þræðir eru notaðir — allt frá einum upp í fjörutíu eða óheft; einn litur á mynd með gegnsæjum bakgrunni gefur skuggamynd af forminu. Birta og birtuskil teikna myndina upp á nýtt strax og „Núllstilla birtu“ setur þá aftur á núll, og „Bara þræðirnir mínir“ notar eingöngu þá þræði sem þú hefur merkt. Viljirðu frekar teikna sjálf eftir myndinni, hakaðu við „Hafa myndina undir netinu“ — þá liggur hún dauf undir og þú velur hvert spor. Hún fylgir hvorki mynstrinu né því sem þú sækir.",
       helpThreadsFlow: "Merktu þræðina sem þú átt í litaspjaldinu; þeir fá punkt og geymast áfram. „Skipta um þráð“ neðst í skránni skiptir einum þræði út fyrir annan alls staðar — veljir þú lit sem er þegar í mynstrinu renna þeir saman í einn.",
@@ -1576,10 +1573,10 @@
       imgBusy: "Vinn úr mynd…",
       imgReady: "Mynstur búið til úr myndinni — {n} spor.",
       imgReadFailed: "Ekki tókst að lesa myndina.",
-      lettersTypeFirst: "Skrifaðu fyrst orð eða nafn.",
       lettersStitchEmpty: "Ekkert kom út — prófaðu annan texta (bakspors-stafrófið styður bókstafi, tölur og algeng greinarmerki).",
       lettersEmpty: "Ekkert kom út — prófaðu annan texta.",
       lettersFollow: "Smelltu á mynstrið þar sem textinn á að lenda.",
+      lettersTooBig: "Textinn er stærri en netið — hluti hans kemst ekki fyrir. Minnkaðu stafina eða stækkaðu netið.",
       relJustNow: "rétt í þessu",
       relMinAgo: "{n} mín síðan",
       relHourAgo: "{n} klst síðan",
@@ -1665,7 +1662,6 @@
       genCropEnd: "Bottom / right",
       lettersInputPlaceholder: "E.g. \"Grandma Sigga\" — one line here is one line on the chart",
       lettersLineGapLabel: "Line spacing",
-      lettersPlaceTitle: "The text follows the pointer — click where it should go",
       lettersFontSiena: "Narrow",
       lettersFontScript: "Joined script",
       lettersFontSerif: "Serif",
@@ -1673,7 +1669,6 @@
       lettersFontStitch: "Backstitch",
       lettersFontLabel: "Alphabet",
       lettersHeightLabel: "Letter height",
-      lettersAddBtn: "Add text",
       flipHTitle: "Flip the pattern horizontally",
       flipHBtn: "Flip horizontal",
       flipVTitle: "Flip the pattern vertically",
@@ -1770,7 +1765,7 @@
       helpKeyRedo: "Ctrl/⌘ + Shift + Z",
       helpRedo: "Redo what was undone",
       helpSelectFlow: "Drag a box around an area, then choose Copy, Cut or Delete. The piece can be mirrored and turned 90° before you click where it should land. Paste puts the same piece down again, as often as you like, and Ctrl/\u2318 + C, X and V work as well. Cancel \u2014 or Esc \u2014 drops the lot: the kept piece is thrown away and the bar leaves the screen.",
-      helpTextFlow: "Each line in the text box becomes one line on the chart, centred over each other. \u201cAdd text\u201d hangs the text off the pointer — click where it should go.",
+      helpTextFlow: "Each line in the text box becomes one line on the chart, centred over each other. The text hangs off the pointer as soon as you type — click the chart where it should land, or use \u201cplace here\u201d. Changing the alphabet, the letter height or the thread rebuilds it on the spot, and the grid is never enlarged to fit: text that is too big is reported as too big.",
       helpMirrorFlow: "Draw one quarter and the rest is mirrored about the middle of the chart. It covers the pen, the bucket, the line, the box and backstitch — erasing too, and rubbing out a backstitch line takes its reflection with it. A pasted piece and placed text land only where you click.",
       helpImageFlow: "The photo fills the whole grid and every stitch gets its nearest DMC colour. \u201cNumber of colours\u201d decides how many threads are used — anything from one to forty, or no limit; one colour on a picture with a see-through background gives a silhouette of the shape. Brightness and contrast redraw it at once and \u201creset brightness\u201d puts them back to nothing, and \u201conly my threads\u201d uses just the ones you have marked. To draw it by hand instead, tick \u201ckeep the photo under the grid\u201d — it then lies faintly underneath and you pick every stitch. It is part of neither the pattern nor anything you download.",
       helpThreadsFlow: "Mark the threads you own in the palette; they get a dot and are remembered. \u201cSwap a thread\u201d at the bottom of the list replaces one thread with another everywhere — pick one already in the pattern and the two merge into one.",
@@ -1838,10 +1833,10 @@
       imgBusy: "Processing image…",
       imgReady: "Pattern generated from the image — {n} stitches.",
       imgReadFailed: "Couldn't read the image.",
-      lettersTypeFirst: "Type a word or name first.",
       lettersStitchEmpty: "Nothing came out — try different text (the backstitch alphabet covers letters, digits and common punctuation).",
       lettersEmpty: "Nothing came out — try different text.",
       lettersFollow: "Click the chart where the text should land.",
+      lettersTooBig: "The text is bigger than the grid — part of it will not fit. Use smaller letters, or a bigger grid.",
       relJustNow: "just now",
       relMinAgo: "{n} min ago",
       relHourAgo: "{n} h ago",
@@ -2267,6 +2262,9 @@
     // so choosing one mid-backstitch should not silently switch tools.
     if (state.tool === "erase") setTool("draw");
     renderPalette();
+    // Text waiting to be placed is written in the chosen thread, so it changes
+    // colour with it rather than landing in the old one.
+    if (pendingStamp && pendingStamp.fromText) refreshTextStamp(true);
   }
   function updateSelectedCard(){
     var p = colorFor(state.selectedColor);
@@ -3698,6 +3696,9 @@
   function placeStamp(){
     if (!pendingStamp || pendingStamp.x === null) return;
     pushUndo();
+    // Writing a name over the little sample heart means replacing it, not
+    // stitching on top of it.
+    if (state.isSample && pendingStamp.fromText){ state.cells = {}; state.backstitches = []; }
     dismissSample();
     var ox = pendingStamp.x, oy = pendingStamp.y;
     Object.keys(pendingStamp.cells).forEach(function(k){
@@ -3865,6 +3866,16 @@
       if (clipKey === "x" && selection){ ev.preventDefault(); cutSelection(); return; }
       if (clipKey === "v" && clipboard){ ev.preventDefault(); stampFromClipboard(); return; }
     }
+    // Escape is heard even mid-word: with the text hanging off the pointer as
+    // she types, the way out has to work without leaving the text box first.
+    if (ev.key === "Escape"){
+      if (helpOpen()){ ev.preventDefault(); closeHelp(); return; }
+      if (pendingStamp || selection || clipboard){
+        ev.preventDefault();
+        dropSelectionWork();
+      }
+      return;
+    }
     if (typing || ev.ctrlKey || ev.metaKey || ev.altKey) return;
     // Single-key tool shortcuts, as in any drawing app.
     var arrows = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
@@ -3879,14 +3890,6 @@
     if ((ev.key === "Delete" || ev.key === "Backspace") && selection && !helpOpen()){
       ev.preventDefault();
       deleteSelection();
-      return;
-    }
-    if (ev.key === "Escape"){
-      if (helpOpen()){ ev.preventDefault(); closeHelp(); return; }
-      if (pendingStamp || selection || clipboard){
-        ev.preventDefault();
-        dropSelectionWork();
-      }
       return;
     }
     if (helpOpen()) return;
@@ -5775,6 +5778,8 @@
   }
   el.lettersFont.addEventListener("change", function(){
     el.lettersHeight.value = naturalHeightFor(el.lettersFont.value);
+    // The letters change under the pointer the moment the alphabet is picked.
+    refreshTextStamp(true);
   });
 
   /* Builds what she typed into a little piece of pattern — one line of the
@@ -5834,36 +5839,66 @@
     lineGap = Math.min(12, Math.max(0, lineGap));
     return { text: text, style: style, height: stitchHeight, lineGap: lineGap };
   }
-  function textPieceOrWarn(){
+  /* ---------------- the text follows along as it is written ----------------
+     No "add" step: whatever is in the box is already hanging off the pointer,
+     and changing the alphabet, the letter height, the line spacing or the
+     thread rebuilds it on the spot. A click on the chart puts it down. The
+     grid is never resized to make room — she chose that size, so text that is
+     too big is simply reported as too big. */
+  var textTimer = null;
+  function lettersPaneOpen(){
+    return !!(el.genLettersPane && !el.genLettersPane.classList.contains("gen-hidden"));
+  }
+  function dropTextStamp(){
+    if (pendingStamp && pendingStamp.fromText){
+      cancelStamp();
+      updateSelectionBar();
+      renderCanvas(true);
+    }
+  }
+  function buildTextStamp(){
+    textTimer = null;
+    if (!lettersPaneOpen()) return;
     var cfg = textSettings();
-    if (!cfg){ setGenStatus(el.lettersStatus, "lettersTypeFirst", "error"); return null; }
+    if (!cfg){                       // nothing written: nothing to carry around
+      dropTextStamp();
+      setGenStatus(el.lettersStatus, "", "");
+      return;
+    }
     var piece = buildTextPiece(cfg.text, cfg.style, cfg.height, cfg.lineGap);
     if (!piece.any){
+      dropTextStamp();
       setGenStatus(el.lettersStatus, cfg.style === "stitch" ? "lettersStitchEmpty" : "lettersEmpty", "error");
-      return null;
+      return;
     }
-    piece.style = cfg.style;
-    return piece;
-  }
-
-  // The text is hung off the pointer so she picks the spot herself.
-  el.lettersAddBtn.addEventListener("click", function(){
-    var piece = textPieceOrWarn();
-    if (!piece) return;
-    if (state.isSample){ state.cells = {}; state.backstitches = []; dismissSample(); }
-    var nw = Math.min(400, Math.max(state.width, piece.w + 2));
-    var nh = Math.min(400, Math.max(state.height, piece.h + 2));
-    if (nw !== state.width || nh !== state.height){
-      state.width = nw; state.height = nh;
-      el.widthInput.value = nw; el.heightInput.value = nh;
-      resizeCanvas(); updateFabricSize(); updateZoomLabel();
-    }
-    // The panel floats over the chart while it is open, so it has to get out
-    // of the way before the text can be dropped anywhere.
-    if (el.genToggleDetails) el.genToggleDetails.open = false;
+    // Keep the spot the last version was hovering over, so changing the
+    // alphabet does not make the text jump away from where she was aiming.
+    var wasAt = (pendingStamp && pendingStamp.fromText && pendingStamp.x !== null)
+      ? { x: pendingStamp.x, y: pendingStamp.y } : null;
     startStamp({ w: piece.w, h: piece.h, cells: piece.cells, back: piece.back });
-    setGenStatus(el.lettersStatus, "lettersFollow", "ok");
+    pendingStamp.fromText = true;
+    if (wasAt){ pendingStamp.x = wasAt.x; pendingStamp.y = wasAt.y; }
+    if (piece.w > state.width || piece.h > state.height){
+      setGenStatus(el.lettersStatus, "lettersTooBig", "error");
+    } else {
+      setGenStatus(el.lettersStatus, "lettersFollow", "ok");
+    }
+    renderCanvas(true);
+  }
+  function refreshTextStamp(immediate){
+    if (textTimer){ clearTimeout(textTimer); textTimer = null; }
+    if (immediate) buildTextStamp();
+    else textTimer = setTimeout(buildTextStamp, 200);
+  }
+  if (el.lettersInput) el.lettersInput.addEventListener("input", function(){ refreshTextStamp(); });
+  [el.lettersHeight, el.lettersLineGap].forEach(function(inp){
+    if (!inp) return;
+    inp.addEventListener("input", function(){ refreshTextStamp(); });
+    inp.addEventListener("change", function(){ refreshTextStamp(true); });
   });
+  // Opening the text tab with something already written picks it up again.
+  if (el.genTabLetters) el.genTabLetters.addEventListener("click", function(){ refreshTextStamp(true); });
+  if (el.genTabImage) el.genTabImage.addEventListener("click", dropTextStamp);
 
   /* ---------------- the "i" panel ----------------
      Everything that used to be written in small print around the page —
